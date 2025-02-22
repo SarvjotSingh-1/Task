@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-lg bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-5">Task Manager</h1>
+        
+        <!-- ✅ Add Task Form -->
+        <form action="/tasks" method="POST" class="mb-4 flex">
+            <input type="text" name="title" placeholder="Enter task..." required
+                class="flex-grow px-3 py-2 border rounded-l-lg focus:outline-none">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600">Add</button>
+        </form>
+
+        <!-- ✅ Display Tasks -->
+        <ul class="space-y-2" id="task-list">
+            <% if (tasks.length === 0) { %>
+                <li class="text-center text-gray-500">No tasks available.</li>
+            <% } else { %>
+                <% tasks.forEach(task => { %>
+                    <li class="flex justify-between items-center p-3 border rounded-lg bg-gray-50" data-id="<%= task.id %>">
+                        <input type="text" value="<%= task.title %>" 
+                            class="border p-1 rounded w-full <%= task.completed ? 'line-through text-gray-500' : 'text-gray-800' %> task-title">
+                        
+                        <div class="flex space-x-2">
+                            <!-- ✅ Update Button -->
+                            <button class="update-btn text-blue-500 hover:text-blue-600">✏</button>
+
+                            <!-- ✅ Mark as Completed -->
+                            <form action="/tasks/<%= task.id %>?_method=PUT" method="POST">
+                                <input type="hidden" name="completed" value="<%= !task.completed %>">
+                                <button type="submit" class="text-green-500 hover:text-green-600">✔</button>
+                            </form>
+
+                            <!-- ✅ Delete Task -->
+                            <form action="/tasks/<%= task.id %>?_method=DELETE" method="POST">
+                                <button type="submit" class="text-red-500 hover:text-red-600">✖</button>
+                            </form>
+                        </div>
+                    </li>
+                <% }) %>
+            <% } %>
+        </ul>
+    </div>
+
+    <!-- ✅ JavaScript for Updating Task -->
+    <script>
+        document.querySelectorAll('.update-btn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const taskItem = this.closest('li');
+                const taskId = taskItem.getAttribute('data-id');
+                const newTitle = taskItem.querySelector('.task-title').value;
+
+                const response = await fetch(`/tasks/${taskId}?_method=PUT`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `title=${encodeURIComponent(newTitle)}`
+                });
+
+                if (response.ok) {
+                    window.location.reload(); // ✅ Refresh page to show updated task
+                } else {
+                    alert("Failed to update task!");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
